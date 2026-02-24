@@ -17,11 +17,13 @@ export default function HomePage() {
   const pledgesQuery = useQuery({
     queryKey: ["pledges"],
     queryFn: getPledgesWithCategories,
+    staleTime: 0,
   });
 
   const statsQuery = useQuery({
     queryKey: ["totalStats"],
     queryFn: getTotalStats,
+    staleTime: 0,
   });
 
   const cats = categoriesQuery.data || staticCategories;

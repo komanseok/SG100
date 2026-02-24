@@ -12,6 +12,7 @@ export default function ResultsPage() {
   const pledgesQuery = useQuery({
     queryKey: ["pledges"],
     queryFn: getPledgesWithCategories,
+    staleTime: 0,
   });
 
   const categoriesQuery = useQuery({
@@ -22,6 +23,7 @@ export default function ResultsPage() {
   const statsQuery = useQuery({
     queryKey: ["totalStats"],
     queryFn: getTotalStats,
+    staleTime: 0,
   });
 
   const pledges = pledgesQuery.data || [];
