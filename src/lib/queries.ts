@@ -111,10 +111,11 @@ export async function getTotalStats() {
   const { data: pledges } = await supabase
     .from("pledges")
     .select("like_count");
-  const { count: voterCount } = await supabase
+  const { data: voters } = await supabase
     .from("votes")
-    .select("fingerprint", { count: "exact", head: true });
+    .select("fingerprint");
+  const uniqueVoters = new Set(voters?.map((v) => v.fingerprint)).size;
 
   const totalVotes = pledges?.reduce((sum, p) => sum + p.like_count, 0) ?? 0;
-  return { totalVotes, voterCount: voterCount ?? 0 };
+  return { totalVotes, voterCount: uniqueVoters };
 }
