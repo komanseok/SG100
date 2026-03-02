@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Category, Pledge, ToggleVoteResult } from "@/types";
+import type { Category, Pledge, ToggleVoteResult, Opinion } from "@/types";
 import {
   categories as staticCategories,
   pledges as staticPledges,
@@ -118,4 +118,143 @@ export async function getTotalStats() {
 
   const totalVotes = pledges?.reduce((sum, p) => sum + p.like_count, 0) ?? 0;
   return { totalVotes, voterCount: uniqueVoters };
+}
+
+// ============================================
+// 구민의 목소리 (Opinions) 관련
+// ============================================
+
+function getLocalOpinions(): Opinion[] {
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem("sg100_opinions");
+  return stored ? JSON.parse(stored) : [];
+}
+
+function saveLocalOpinions(opinions: Opinion[]) {
+  localStorage.setItem("sg100_opinions", JSON.stringify(opinions));
+}
+
+function getLocalOpinionLikes(): string[] {
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem("sg100_opinion_likes");
+  return stored ? JSON.parse(stored) : [];
+}
+
+function saveLocalOpinionLikes(likes: string[]) {
+  localStorage.setItem("sg100_opinion_likes", JSON.stringify(likes));
+}
+
+export async function getOpinions(
+  sort: "latest" | "popular" = "latest"
+): Promise<Opinion[]> {
+  if (!isSupabaseConfigured) {
+    const opinions = getLocalOpinions();
+    return sort === "popular"
+      ? [...opinions].sort((a, b) => b.like_count - a.like_count)
+      : [...opinions].sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+  }
+  const orderCol = sort === "popular" ? "like_count" : "created_at";
+  const { data, error } = await supabase
+    .from("opinions")
+    .select("*")
+    .order(orderCol, { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createOpinion(
+  content: string,
+  fingerprint: string
+): Promise<Opinion> {
+  if (!isSupabaseConfigured) {
+    const opinions = getLocalOpinions();
+    const today = new Date().toDateString();
+    const todayCount = opinions.filter(
+      (o) =>
+        o.fingerprint === fingerprint &&
+        new Date(o.created_at).toDateString() === today
+    ).length;
+    if (todayCount >= 3) throw new Error("오늘 작성 가능한 의견 수(3개)를 초과했습니다.");
+
+    const newOpinion: Opinion = {
+      id: crypto.randomUUID(),
+      content,
+      fingerprint,
+      like_count: 0,
+      created_at: new Date().toISOString(),
+    };
+    saveLocalOpinions([newOpinion, ...opinions]);
+    return newOpinion;
+  }
+
+  // Supabase: 하루 3개 제한 체크
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const { count } = await supabase
+    .from("opinions")
+    .select("*", { count: "exact", head: true })
+    .eq("fingerprint", fingerprint)
+    .gte("created_at", todayStart.toISOString());
+  if ((count ?? 0) >= 3) throw new Error("오늘 작성 가능한 의견 수(3개)를 초과했습니다.");
+
+  const { data, error } = await supabase
+    .from("opinions")
+    .insert({ content, fingerprint })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function toggleOpinionLike(
+  opinionId: string,
+  fingerprint: string
+): Promise<{ liked: boolean; like_count: number }> {
+  if (!isSupabaseConfigured) {
+    const likes = getLocalOpinionLikes();
+    const key = `${opinionId}:${fingerprint}`;
+    const exists = likes.includes(key);
+
+    if (exists) {
+      saveLocalOpinionLikes(likes.filter((l) => l !== key));
+    } else {
+      saveLocalOpinionLikes([...likes, key]);
+    }
+
+    const opinions = getLocalOpinions();
+    const updated = opinions.map((o) =>
+      o.id === opinionId
+        ? { ...o, like_count: o.like_count + (exists ? -1 : 1) }
+        : o
+    );
+    saveLocalOpinions(updated);
+
+    const opinion = updated.find((o) => o.id === opinionId);
+    return { liked: !exists, like_count: opinion?.like_count ?? 0 };
+  }
+
+  const { data, error } = await supabase.rpc("toggle_opinion_like", {
+    p_opinion_id: opinionId,
+    p_fingerprint: fingerprint,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function getMyOpinionLikes(fingerprint: string): Promise<string[]> {
+  if (!isSupabaseConfigured) {
+    const likes = getLocalOpinionLikes();
+    return likes
+      .filter((l) => l.endsWith(`:${fingerprint}`))
+      .map((l) => l.split(":")[0]);
+  }
+  const { data, error } = await supabase
+    .from("opinion_likes")
+    .select("opinion_id")
+    .eq("fingerprint", fingerprint);
+  if (error) throw error;
+  return data.map((l) => l.opinion_id);
 }

@@ -195,3 +195,74 @@ INSERT INTO pledges (number, category_id, title) VALUES
 -- 시퀀스 재설정
 SELECT setval('categories_id_seq', 7);
 SELECT setval('pledges_id_seq', 100);
+
+-- ============================================
+-- 구민의 목소리 (opinions) 관련 테이블
+-- ============================================
+
+-- 10. 의견 테이블
+CREATE TABLE opinions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content TEXT NOT NULL CHECK (char_length(content) BETWEEN 2 AND 300),
+  fingerprint TEXT NOT NULL,
+  like_count INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 11. 의견 공감 테이블
+CREATE TABLE opinion_likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  opinion_id UUID NOT NULL REFERENCES opinions(id) ON DELETE CASCADE,
+  fingerprint TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(opinion_id, fingerprint)
+);
+
+-- 12. 인덱스
+CREATE INDEX idx_opinions_created_at ON opinions(created_at DESC);
+CREATE INDEX idx_opinions_like_count ON opinions(like_count DESC);
+CREATE INDEX idx_opinions_fingerprint ON opinions(fingerprint);
+CREATE INDEX idx_opinion_likes_opinion_id ON opinion_likes(opinion_id);
+CREATE INDEX idx_opinion_likes_fingerprint ON opinion_likes(fingerprint);
+
+-- 13. RLS 활성화
+ALTER TABLE opinions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE opinion_likes ENABLE ROW LEVEL SECURITY;
+
+-- 14. RLS 정책
+CREATE POLICY "Public read opinions" ON opinions FOR SELECT USING (true);
+CREATE POLICY "Anyone can create opinion" ON opinions FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public read opinion_likes" ON opinion_likes FOR SELECT USING (true);
+CREATE POLICY "Anyone can like opinion" ON opinion_likes FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can unlike opinion" ON opinion_likes FOR DELETE USING (true);
+
+-- 15. 의견 공감 토글 함수
+CREATE OR REPLACE FUNCTION toggle_opinion_like(
+  p_opinion_id UUID,
+  p_fingerprint TEXT
+) RETURNS JSON AS $$
+DECLARE
+  existing_like UUID;
+  new_count INT;
+BEGIN
+  SELECT id INTO existing_like
+  FROM opinion_likes
+  WHERE opinion_id = p_opinion_id AND fingerprint = p_fingerprint;
+
+  IF existing_like IS NOT NULL THEN
+    DELETE FROM opinion_likes WHERE id = existing_like;
+    UPDATE opinions SET like_count = like_count - 1 WHERE id = p_opinion_id;
+  ELSE
+    INSERT INTO opinion_likes (opinion_id, fingerprint)
+    VALUES (p_opinion_id, p_fingerprint);
+    UPDATE opinions SET like_count = like_count + 1 WHERE id = p_opinion_id;
+  END IF;
+
+  SELECT like_count INTO new_count FROM opinions WHERE id = p_opinion_id;
+
+  RETURN json_build_object(
+    'liked', existing_like IS NULL,
+    'like_count', new_count
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

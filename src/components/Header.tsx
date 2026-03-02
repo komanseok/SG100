@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Vote, BarChart3, Home } from "lucide-react";
+import { Vote, BarChart3, Home, MessageCircle } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "홈", icon: Home },
   { href: "/vote", label: "투표하기", icon: Vote },
   { href: "/results", label: "결과보기", icon: BarChart3 },
+  { href: "/voices", label: "구민의 목소리", icon: MessageCircle },
 ];
 
 export function Header() {

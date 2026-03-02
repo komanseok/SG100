@@ -27,3 +27,18 @@ export interface ToggleVoteResult {
   liked: boolean;
   like_count: number;
 }
+
+export interface Opinion {
+  id: string;
+  content: string;
+  fingerprint: string;
+  like_count: number;
+  created_at: string;
+}
+
+export interface OpinionLike {
+  id: string;
+  opinion_id: string;
+  fingerprint: string;
+  created_at: string;
+}
