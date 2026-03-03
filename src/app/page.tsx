@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Vote, BarChart3, ChevronRight } from "lucide-react";
+import { Vote, BarChart3, ChevronRight, ThumbsUp, Users } from "lucide-react";
+import { SnsLinks } from "@/components/SnsLinks";
 import { useQuery } from "@tanstack/react-query";
 import { CategoryCard } from "@/components/CategoryCard";
 import { getCategories, getPledgesWithCategories, getTotalStats } from "@/lib/queries";
@@ -65,22 +66,54 @@ export default function HomePage() {
               100가지 약속
             </h2>
 
-            {stats && (
-              <div className="flex gap-8 mb-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold">
-                    {stats.totalVotes.toLocaleString()}
-                  </p>
-                  <p className="text-blue-200 text-xs">총 투표수</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold">
-                    {stats.voterCount.toLocaleString()}
-                  </p>
-                  <p className="text-blue-200 text-xs">참여자 수</p>
-                </div>
+            <div className="flex gap-4 mb-6 w-full max-w-xs">
+              <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20">
+                {stats ? (
+                  <div className="animate-fade-in-up text-center">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <ThumbsUp size={14} className="text-blue-200" />
+                      <p className="text-blue-200 text-xs font-medium">총 투표수</p>
+                    </div>
+                    <p className="text-2xl font-bold tracking-tight">
+                      {stats.totalVotes.toLocaleString()}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <ThumbsUp size={14} className="text-blue-200" />
+                      <p className="text-blue-200 text-xs font-medium">총 투표수</p>
+                    </div>
+                    <div className="h-8 flex items-center justify-center">
+                      <div className="w-16 h-5 bg-white/20 rounded-md animate-pulse" />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+              <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20">
+                {stats ? (
+                  <div className="animate-fade-in-up text-center">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <Users size={14} className="text-blue-200" />
+                      <p className="text-blue-200 text-xs font-medium">참여자 수</p>
+                    </div>
+                    <p className="text-2xl font-bold tracking-tight">
+                      {stats.voterCount.toLocaleString()}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1.5 mb-1">
+                      <Users size={14} className="text-blue-200" />
+                      <p className="text-blue-200 text-xs font-medium">참여자 수</p>
+                    </div>
+                    <div className="h-8 flex items-center justify-center">
+                      <div className="w-16 h-5 bg-white/20 rounded-md animate-pulse" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
               <Link
@@ -97,6 +130,10 @@ export default function HomePage() {
                 <BarChart3 size={20} />
                 결과 보기
               </Link>
+            </div>
+
+            <div className="mt-5">
+              <SnsLinks />
             </div>
           </div>
         </div>

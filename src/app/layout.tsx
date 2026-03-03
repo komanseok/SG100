@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/lib/providers";
 import { Header } from "@/components/Header";
+import { SnsLinks } from "@/components/SnsLinks";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,9 @@ export default function RootLayout({
           <footer className="bg-white border-t border-slate-200 py-6 text-center text-sm text-slate-500">
             <p>SG100 프로젝트 | 서구를 바꾸는 100가지 약속</p>
             <p className="mt-1">더불어민주당 대전 서구청장 예비후보 주정봉</p>
+            <div className="flex justify-center mt-3">
+              <SnsLinks size="sm" />
+            </div>
           </footer>
         </Providers>
       </body>
