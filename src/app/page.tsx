@@ -132,7 +132,8 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div className="mt-5">
+            <div className="mt-5 flex flex-col items-center gap-2">
+              <p className="text-sm font-semibold text-white/80 tracking-wide">주정봉 SNS 채널</p>
               <SnsLinks />
             </div>
           </div>

@@ -5,7 +5,7 @@ const snsItems = [
     href: "https://www.youtube.com/channel/UCrSm4WWIjWMCyX32GOsS-dQ",
     label: "YouTube",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 461.001 461.001">
+      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 461.001 461.001">
         <path fill="#F61C0D" d="M365.257 67.393H95.744C42.866 67.393 0 110.259 0 163.137v134.728c0 52.878 42.866 95.744 95.744 95.744h269.513c52.878 0 95.744-42.866 95.744-95.744V163.137c0-52.878-42.866-95.744-95.744-95.744zm-73.024 166.09-122.639 63.656c-3.264 1.694-7.148-.475-7.148-4.003V168.13c0-3.569 3.96-5.72 7.206-3.913l122.639 68.218c3.573 1.99 3.526 7.14-.058 9.048z"/>
       </svg>
     ),
@@ -14,7 +14,7 @@ const snsItems = [
     href: "https://facebook.com/jeongbong.joo",
     label: "Facebook",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512">
+      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 512 512">
         <path fill="#1877F2" d="M512 256C512 114.6 397.4 0 256 0S0 114.6 0 256c0 120.5 83.2 221.6 195.2 249.1V334.2h-54.6V256h54.6v-33.7c0-81.1 36.1-120.3 117.9-120.3 15.3 0 41.7 3 52.5 6v70.2c-5.7-.6-15.6-.9-27.9-.9-39.6 0-54.9 15-54.9 54.1V256h79.1l-13.6 78.2h-65.5v176.9C420.7 488.1 512 381.5 512 256z"/>
       </svg>
     ),
@@ -23,7 +23,7 @@ const snsItems = [
     href: "https://instagram.com/joojeongbong",
     label: "Instagram",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 551.034 551.034">
+      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 551.034 551.034">
         <linearGradient id="ig" x1="0.5" y1="1" x2="0.5" y2="0">
           <stop offset="0%" stopColor="#FFC107"/>
           <stop offset="50%" stopColor="#F44336"/>
@@ -38,22 +38,22 @@ const snsItems = [
 ];
 
 export function SnsLinks({ size = "md" }: { size?: "sm" | "md" }) {
-  const iconSize = size === "sm" ? "w-5 h-5" : "w-6 h-6";
+  const iconSize = size === "sm" ? "w-8 h-8" : "w-10 h-10";
 
   return (
-    <div className="flex items-center gap-4">
-      {snsItems.map((item) => (
-        <a
-          key={item.label}
-          href={item.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:scale-110 transition-transform"
-          aria-label={item.label}
-        >
-          <span className={`${iconSize} inline-block`}>{item.icon}</span>
-        </a>
-      ))}
+    <div className="flex items-center gap-5">
+        {snsItems.map((item) => (
+          <a
+            key={item.label}
+            href={item.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:scale-110 transition-transform"
+            aria-label={item.label}
+          >
+            <span className={`${iconSize} inline-block`}>{item.icon}</span>
+          </a>
+        ))}
     </div>
   );
 }

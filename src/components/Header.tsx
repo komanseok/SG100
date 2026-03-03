@@ -21,7 +21,10 @@ export function Header() {
           <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
             <span className="text-white font-bold text-sm">SG</span>
           </div>
-          <span className="font-bold text-lg text-slate-900">SG100</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-lg text-slate-900 leading-tight">SG100</span>
+            <span className="text-[10px] text-slate-500 leading-tight">서구를 위한 정책제안 플랫폼</span>
+          </div>
         </Link>
         <nav className="flex items-center gap-1">
           {navItems.map((item) => {
