@@ -130,6 +130,16 @@ function getLocalOpinions(): Opinion[] {
   return stored ? JSON.parse(stored) : [];
 }
 
+function getLocalReports(): string[] {
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem("sg100_opinion_reports");
+  return stored ? JSON.parse(stored) : [];
+}
+
+function saveLocalReports(reports: string[]) {
+  localStorage.setItem("sg100_opinion_reports", JSON.stringify(reports));
+}
+
 function saveLocalOpinions(opinions: Opinion[]) {
   localStorage.setItem("sg100_opinions", JSON.stringify(opinions));
 }
@@ -184,6 +194,8 @@ export async function createOpinion(
       content,
       fingerprint,
       like_count: 0,
+      report_count: 0,
+      is_hidden: false,
       created_at: new Date().toISOString(),
     };
     saveLocalOpinions([newOpinion, ...opinions]);
@@ -257,4 +269,88 @@ export async function getMyOpinionLikes(fingerprint: string): Promise<string[]> 
     .eq("fingerprint", fingerprint);
   if (error) throw error;
   return data.map((l) => l.opinion_id);
+}
+
+// ============================================
+// 의견 신고 관련
+// ============================================
+
+export async function reportOpinion(
+  opinionId: string,
+  fingerprint: string
+): Promise<{ already_reported: boolean; report_count: number }> {
+  if (!isSupabaseConfigured) {
+    const reports = getLocalReports();
+    const key = `${opinionId}:${fingerprint}`;
+    if (reports.includes(key)) {
+      const opinions = getLocalOpinions();
+      const opinion = opinions.find((o) => o.id === opinionId);
+      return { already_reported: true, report_count: opinion?.report_count ?? 0 };
+    }
+
+    saveLocalReports([...reports, key]);
+
+    const opinions = getLocalOpinions();
+    const updated = opinions.map((o) => {
+      if (o.id !== opinionId) return o;
+      const newCount = o.report_count + 1;
+      return { ...o, report_count: newCount, is_hidden: newCount >= 3 };
+    });
+    saveLocalOpinions(updated);
+
+    const opinion = updated.find((o) => o.id === opinionId);
+    return { already_reported: false, report_count: opinion?.report_count ?? 0 };
+  }
+
+  const { data, error } = await supabase.rpc("report_opinion", {
+    p_opinion_id: opinionId,
+    p_fingerprint: fingerprint,
+  });
+  if (error) {
+    // RPC 함수가 없으면 직접 테이블에 insert + report_count 증가
+    const { error: insertError } = await supabase
+      .from("opinion_reports")
+      .insert({ opinion_id: opinionId, fingerprint });
+    if (insertError) {
+      if (insertError.code === "23505") {
+        return { already_reported: true, report_count: 0 };
+      }
+      throw insertError;
+    }
+
+    // report_count 증가 + 3회 이상이면 is_hidden 처리
+    const { data: opinion } = await supabase
+      .from("opinions")
+      .select("report_count")
+      .eq("id", opinionId)
+      .single();
+    const newCount = (opinion?.report_count ?? 0) + 1;
+    const updateFields: { report_count: number; is_hidden?: boolean } = { report_count: newCount };
+    if (newCount >= 3) updateFields.is_hidden = true;
+    await supabase.from("opinions").update(updateFields).eq("id", opinionId);
+
+    return { already_reported: false, report_count: newCount };
+  }
+  return data;
+}
+
+export async function getMyReports(fingerprint: string): Promise<string[]> {
+  if (!isSupabaseConfigured) {
+    const reports = getLocalReports();
+    return reports
+      .filter((r) => r.endsWith(`:${fingerprint}`))
+      .map((r) => r.split(":")[0]);
+  }
+  const { data, error } = await supabase
+    .from("opinion_reports")
+    .select("opinion_id")
+    .eq("fingerprint", fingerprint);
+  if (error) {
+    // opinion_reports 테이블이 아직 DB에 없으면 로컬 fallback
+    const reports = getLocalReports();
+    return reports
+      .filter((r) => r.endsWith(`:${fingerprint}`))
+      .map((r) => r.split(":")[0]);
+  }
+  return data.map((r) => r.opinion_id);
 }

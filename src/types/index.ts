@@ -33,10 +33,19 @@ export interface Opinion {
   content: string;
   fingerprint: string;
   like_count: number;
+  report_count: number;
+  is_hidden: boolean;
   created_at: string;
 }
 
 export interface OpinionLike {
+  id: string;
+  opinion_id: string;
+  fingerprint: string;
+  created_at: string;
+}
+
+export interface OpinionReport {
   id: string;
   opinion_id: string;
   fingerprint: string;

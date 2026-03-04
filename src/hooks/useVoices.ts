@@ -7,6 +7,8 @@ import {
   createOpinion,
   toggleOpinionLike,
   getMyOpinionLikes,
+  reportOpinion,
+  getMyReports,
 } from "@/lib/queries";
 import { getFingerprint } from "@/lib/fingerprint";
 import type { Opinion } from "@/types";
@@ -27,6 +29,12 @@ export function useVoices(sort: "latest" | "popular" = "latest") {
   const myLikesQuery = useQuery({
     queryKey: ["myOpinionLikes", fingerprint],
     queryFn: () => getMyOpinionLikes(fingerprint),
+    enabled: !!fingerprint,
+  });
+
+  const myReportsQuery = useQuery({
+    queryKey: ["myOpinionReports", fingerprint],
+    queryFn: () => getMyReports(fingerprint),
     enabled: !!fingerprint,
   });
 
@@ -94,14 +102,25 @@ export function useVoices(sort: "latest" | "popular" = "latest") {
     },
   });
 
+  const reportMutation = useMutation({
+    mutationFn: (opinionId: string) => reportOpinion(opinionId, fingerprint),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["opinions"] });
+      queryClient.invalidateQueries({ queryKey: ["myOpinionReports", fingerprint] });
+    },
+  });
+
   return {
     opinions: opinionsQuery.data || [],
     myLikes: new Set(myLikesQuery.data || []),
+    myReports: new Set(myReportsQuery.data || []),
     isLoading: opinionsQuery.isLoading,
     create: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
     toggleLike: likeMutation.mutate,
     isLiking: likeMutation.isPending,
+    report: reportMutation.mutateAsync,
+    isReporting: reportMutation.isPending,
     fingerprint,
   };
 }

@@ -13,11 +13,14 @@ export default function VoicesPage() {
   const {
     opinions,
     myLikes,
+    myReports,
     isLoading,
     create,
     isCreating,
     toggleLike,
     isLiking,
+    report,
+    isReporting,
   } = useVoices(sort);
 
   return (
@@ -91,8 +94,10 @@ export default function VoicesPage() {
               key={opinion.id}
               opinion={opinion}
               liked={myLikes.has(opinion.id)}
+              reported={myReports.has(opinion.id)}
               onToggleLike={() => toggleLike(opinion.id)}
-              disabled={isLiking}
+              onReport={() => report(opinion.id)}
+              disabled={isLiking || isReporting}
             />
           ))}
         </div>

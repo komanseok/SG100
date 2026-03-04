@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Send } from "lucide-react";
+import { containsProfanity } from "@/lib/profanity";
 
 interface OpinionFormProps {
   onSubmit: (content: string) => Promise<unknown>;
@@ -24,6 +25,10 @@ export function OpinionForm({ onSubmit, isSubmitting }: OpinionFormProps) {
 
     try {
       setError("");
+      if (containsProfanity(trimmed)) {
+        setError("부적절한 표현이 포함되어 있습니다.");
+        return;
+      }
       await onSubmit(trimmed);
       setContent("");
     } catch (err) {

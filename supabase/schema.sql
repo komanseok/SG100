@@ -206,6 +206,8 @@ CREATE TABLE opinions (
   content TEXT NOT NULL CHECK (char_length(content) BETWEEN 2 AND 300),
   fingerprint TEXT NOT NULL,
   like_count INT NOT NULL DEFAULT 0,
+  report_count INT NOT NULL DEFAULT 0,
+  is_hidden BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -232,6 +234,7 @@ ALTER TABLE opinion_likes ENABLE ROW LEVEL SECURITY;
 -- 14. RLS 정책
 CREATE POLICY "Public read opinions" ON opinions FOR SELECT USING (true);
 CREATE POLICY "Anyone can create opinion" ON opinions FOR INSERT WITH CHECK (true);
+CREATE POLICY "Anyone can update opinion" ON opinions FOR UPDATE USING (true);
 CREATE POLICY "Public read opinion_likes" ON opinion_likes FOR SELECT USING (true);
 CREATE POLICY "Anyone can like opinion" ON opinion_likes FOR INSERT WITH CHECK (true);
 CREATE POLICY "Anyone can unlike opinion" ON opinion_likes FOR DELETE USING (true);
@@ -263,6 +266,69 @@ BEGIN
   RETURN json_build_object(
     'liked', existing_like IS NULL,
     'like_count', new_count
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- 의견 신고 (opinion_reports) 관련
+-- ============================================
+-- 기존 DB 마이그레이션 (opinions 테이블에 컬럼이 없을 경우 실행)
+-- ALTER TABLE opinions ADD COLUMN IF NOT EXISTS report_count INT NOT NULL DEFAULT 0;
+-- ALTER TABLE opinions ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN NOT NULL DEFAULT false;
+-- 기존 DB에 opinions 테이블의 update 정책이 없을 경우 실행
+-- CREATE POLICY "Anyone can update opinion" ON opinions FOR UPDATE USING (true);
+-- ============================================
+
+-- 16. 의견 신고 테이블
+CREATE TABLE opinion_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  opinion_id UUID NOT NULL REFERENCES opinions(id) ON DELETE CASCADE,
+  fingerprint TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(opinion_id, fingerprint)
+);
+
+-- 17. 인덱스
+CREATE INDEX idx_opinion_reports_opinion_id ON opinion_reports(opinion_id);
+CREATE INDEX idx_opinion_reports_fingerprint ON opinion_reports(fingerprint);
+
+-- 18. RLS
+ALTER TABLE opinion_reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read opinion_reports" ON opinion_reports FOR SELECT USING (true);
+CREATE POLICY "Anyone can report opinion" ON opinion_reports FOR INSERT WITH CHECK (true);
+
+-- 19. 신고 RPC 함수: 신고 삽입 → report_count 증가 → 3회 이상이면 is_hidden = true
+CREATE OR REPLACE FUNCTION report_opinion(
+  p_opinion_id UUID,
+  p_fingerprint TEXT
+) RETURNS JSON AS $$
+DECLARE
+  existing_report UUID;
+  new_count INT;
+BEGIN
+  SELECT id INTO existing_report
+  FROM opinion_reports
+  WHERE opinion_id = p_opinion_id AND fingerprint = p_fingerprint;
+
+  IF existing_report IS NOT NULL THEN
+    RETURN json_build_object('already_reported', true, 'report_count', (SELECT report_count FROM opinions WHERE id = p_opinion_id));
+  END IF;
+
+  INSERT INTO opinion_reports (opinion_id, fingerprint)
+  VALUES (p_opinion_id, p_fingerprint);
+
+  UPDATE opinions SET report_count = report_count + 1 WHERE id = p_opinion_id;
+
+  SELECT report_count INTO new_count FROM opinions WHERE id = p_opinion_id;
+
+  IF new_count >= 3 THEN
+    UPDATE opinions SET is_hidden = true WHERE id = p_opinion_id;
+  END IF;
+
+  RETURN json_build_object(
+    'already_reported', false,
+    'report_count', new_count
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
