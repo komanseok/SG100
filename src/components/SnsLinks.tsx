@@ -20,6 +20,16 @@ const snsItems = [
     ),
   },
   {
+    href: "https://m.blog.naver.com/victory0603jb",
+    label: "Naver Blog",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 512 512">
+        <path fill="#03C75A" d="M9.067 0C4.067 0 0 4.067 0 9.067v493.867C0 507.933 4.067 512 9.067 512h493.867c5 0 9.067-4.067 9.067-9.067V9.067C512 4.067 507.933 0 502.933 0H9.067z"/>
+        <path fill="#fff" d="M291.67 259.33 215.57 153.6h-56.37v204.8h61.13V252.67L296.43 358.4h56.37V153.6H291.67v105.73z"/>
+      </svg>
+    ),
+  },
+  {
     href: "https://instagram.com/joojeongbong",
     label: "Instagram",
     icon: (
