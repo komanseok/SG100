@@ -54,7 +54,7 @@ export default function ResultsPage() {
 
       {/* Stats Summary */}
       {stats && (
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className={`grid ${stats.voterCount >= 1000 ? "grid-cols-2" : "grid-cols-1"} gap-3 mb-6`}>
           <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
               <Heart size={20} className="text-red-500" />
@@ -66,17 +66,19 @@ export default function ResultsPage() {
               <p className="text-xs text-slate-500">총 투표수</p>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <Users size={20} className="text-blue-500" />
+          {stats.voterCount >= 1000 && (
+            <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                <Users size={20} className="text-blue-500" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-slate-900">
+                  {stats.voterCount.toLocaleString()}
+                </p>
+                <p className="text-xs text-slate-500">참여자 수</p>
+              </div>
             </div>
-            <div>
-              <p className="text-lg font-bold text-slate-900">
-                {stats.voterCount.toLocaleString()}
-              </p>
-              <p className="text-xs text-slate-500">참여자 수</p>
-            </div>
-          </div>
+          )}
         </div>
       )}
 

@@ -111,13 +111,11 @@ export async function getTotalStats() {
   const { data: pledges } = await supabase
     .from("pledges")
     .select("like_count");
-  const { data: voters } = await supabase
-    .from("votes")
-    .select("fingerprint");
-  const uniqueVoters = new Set(voters?.map((v) => v.fingerprint)).size;
+  const { data: voterData } = await supabase
+    .rpc("get_unique_voter_count");
 
   const totalVotes = pledges?.reduce((sum, p) => sum + p.like_count, 0) ?? 0;
-  return { totalVotes, voterCount: uniqueVoters };
+  return { totalVotes, voterCount: voterData ?? 0 };
 }
 
 // ============================================

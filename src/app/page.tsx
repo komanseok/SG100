@@ -90,8 +90,8 @@ export default function HomePage() {
                   </div>
                 )}
               </div>
-              <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20">
-                {stats ? (
+              {stats && stats.voterCount >= 1000 && (
+                <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20">
                   <div className="animate-fade-in-up text-center">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <Users size={14} className="text-blue-200" />
@@ -101,18 +101,8 @@ export default function HomePage() {
                       {stats.voterCount.toLocaleString()}
                     </p>
                   </div>
-                ) : (
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                      <Users size={14} className="text-blue-200" />
-                      <p className="text-blue-200 text-xs font-medium">참여자 수</p>
-                    </div>
-                    <div className="h-8 flex items-center justify-center">
-                      <div className="w-16 h-5 bg-white/20 rounded-md animate-pulse" />
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
