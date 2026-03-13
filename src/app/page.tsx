@@ -126,6 +126,41 @@ export default function HomePage() {
               <p className="text-sm font-semibold text-white/80 tracking-wide">주정봉 SNS 채널</p>
               <SnsLinks />
             </div>
+
+            {/* 청년·여성 전용 정책 투표 배너 */}
+            <div className="mt-6 w-full max-w-sm">
+              <p className="text-sm font-bold text-white/90 mb-3 tracking-wide">
+                청년·여성 전용 정책 투표
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/vote?special=youth"
+                  className="group relative bg-gradient-to-br from-pink-500 to-orange-400 rounded-2xl p-4 text-left shadow-lg hover:shadow-xl transition-all active:scale-95 overflow-hidden"
+                >
+                  <div className="absolute top-1 right-1 text-3xl opacity-30">🔥</div>
+                  <p className="text-[11px] font-medium text-white/80 mb-1">서구 청년</p>
+                  <p className="text-sm font-bold text-white leading-tight">
+                    갓생(God-生)
+                    <br />
+                    정책
+                  </p>
+                  <p className="text-[10px] text-white/70 mt-2">11개 정책 →</p>
+                </Link>
+                <Link
+                  href="/vote?special=women"
+                  className="group relative bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-4 text-left shadow-lg hover:shadow-xl transition-all active:scale-95 overflow-hidden"
+                >
+                  <div className="absolute top-1 right-1 text-3xl opacity-30">💜</div>
+                  <p className="text-[11px] font-medium text-white/80 mb-1">서구 여성</p>
+                  <p className="text-sm font-bold text-white leading-tight">
+                    갓생(God-生)
+                    <br />
+                    정책
+                  </p>
+                  <p className="text-[10px] text-white/70 mt-2">5개 정책 →</p>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -11,9 +11,21 @@ import { getCategories } from "@/lib/queries";
 import { categories as staticCategories } from "@/data/pledges";
 import { Loader2 } from "lucide-react";
 
+const SPECIAL_FILTERS: Record<string, { label: string; numbers: number[] }> = {
+  youth: {
+    label: "서구 청년 갓생(God-生) 정책",
+    numbers: [84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94],
+  },
+  women: {
+    label: "서구 여성 갓생(God-生) 정책",
+    numbers: [24, 47, 48, 54, 65],
+  },
+};
+
 function VoteContent() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category");
+  const specialFilter = searchParams.get("special");
 
   const [selectedCategory, setSelectedCategory] = useState<number | null>(
     initialCategory ? parseInt(initialCategory) : null
@@ -28,9 +40,13 @@ function VoteContent() {
   const { pledges, myVotes, isLoading, vote, isVoting } = useVoteData();
   const cats = categoriesQuery.data || staticCategories;
 
+  const special = specialFilter ? SPECIAL_FILTERS[specialFilter] : null;
+
   const filteredPledges = useMemo(() => {
     let result = pledges;
-    if (selectedCategory !== null) {
+    if (special) {
+      result = result.filter((p) => special.numbers.includes(p.number));
+    } else if (selectedCategory !== null) {
       result = result.filter((p) => p.category_id === selectedCategory);
     }
     if (searchQuery.trim()) {
@@ -42,24 +58,26 @@ function VoteContent() {
       );
     }
     return result;
-  }, [pledges, selectedCategory, searchQuery]);
+  }, [pledges, selectedCategory, searchQuery, special]);
 
   const groupedPledges = useMemo(() => {
-    if (selectedCategory !== null || searchQuery.trim()) {
+    if (special || selectedCategory !== null || searchQuery.trim()) {
       return [{ category: null, pledges: filteredPledges }];
     }
     return cats.map((cat) => ({
       category: cat,
       pledges: filteredPledges.filter((p) => p.category_id === cat.id),
     }));
-  }, [filteredPledges, cats, selectedCategory, searchQuery]);
+  }, [filteredPledges, cats, selectedCategory, searchQuery, special]);
 
   const myVoteCount = myVotes.size;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
       <div className="mb-4">
-        <h1 className="text-xl font-bold text-slate-900 mb-1">공약 투표</h1>
+        <h1 className="text-xl font-bold text-slate-900 mb-1">
+          {special ? special.label : "공약 투표"}
+        </h1>
         <p className="text-sm text-slate-500">
           관심 있는 공약에 하트를 눌러주세요
         </p>
@@ -67,11 +85,13 @@ function VoteContent() {
 
       {/* Filters */}
       <div className="sticky top-14 z-40 bg-slate-50 pb-3 pt-1 -mx-4 px-4 space-y-3">
-        <CategoryFilter
-          categories={cats}
-          selected={selectedCategory}
-          onSelect={setSelectedCategory}
-        />
+        {!special && (
+          <CategoryFilter
+            categories={cats}
+            selected={selectedCategory}
+            onSelect={setSelectedCategory}
+          />
+        )}
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
 
