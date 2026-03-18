@@ -23,7 +23,7 @@ export function Header() {
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-lg text-slate-900 leading-tight">SG100</span>
-            <span className="text-[10px] text-slate-500 leading-tight">서구를 위한 정책제안 플랫폼</span>
+            <span className="text-[10px] text-slate-500 leading-tight">서구를 바꿀 정책제안 플랫폼</span>
           </div>
         </Link>
         <nav className="flex items-center gap-1">
